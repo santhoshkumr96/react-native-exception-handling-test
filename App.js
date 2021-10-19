@@ -6,7 +6,7 @@
  * @flow strict-local
  */
 
-import React from 'react';
+import React,{useEffect ,useState} from 'react';
 import type { Node } from 'react';
 import {
   Button,
@@ -18,9 +18,14 @@ import {
   useColorScheme,
   View,
   Alert
+  
 } from 'react-native';
 
+
+
 import axios from 'axios';
+
+// import RnTestExceptionHandler from 'rn-test-exception-handler';
 
 import { NativeModules } from 'react-native';
 
@@ -43,6 +48,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
+    console.log("error boundary error catch" , error , errorInfo);
     // Catch errors in any components below and re-render with error message
     this.setState({
       error: error,
@@ -55,24 +61,24 @@ class ErrorBoundary extends React.Component {
     if (this.state.errorInfo) {
       // Error path
       return (
-        <Text> 
-          {this.state.error && this.state.error.toString() }
+        <Text>
+          {this.state.error && this.state.error.toString()}
           {/* && this.state.errorInfo.componentStack */}
         </Text>
       );
     }
     // Normally, just render children
     return this.props.children;
-  }
+  } 
 }
 
 class BuggyCounter extends React.Component {
-  state = { 
+  state = {
     counter: 0,
   }
 
   handleClick = () => {
-  
+    // RnTestExceptionHandler.callFromJavaScript()
     this.setState(({ counter }) => ({
       counter: counter + 1
     }));
@@ -124,8 +130,8 @@ const Section = ({ children, title }): Node => {
 const errorHandler = (e, isFatal) => {
   if (isFatal) {
     Alert.alert(
-        'Unexpected error occurred',
-        `
+      'Unexpected error occurred',
+      `
         Error: ${(isFatal) ? 'Fatal:' : ''} ${e.name} ${e.message}
         We have reported this to our team ! Please close the app and start again!
         `,
@@ -139,16 +145,17 @@ const errorHandler = (e, isFatal) => {
 };
 
 const errorHandlerUtils = (e, isFatal) => {
+  const temp = { "a": "asdkjfhasjkldfh" };
   axios.create({
     baseURL: '',
-    headers: {'Content-Type': 'application/json'}
-  }).post('http://10.0.2.2:3000/',e,{})
-  .then(
-  );
+    headers: { 'Content-Type': 'application/json' }
+  }).post('http://localhost:3000/', temp, {})
+    .then(
+    );
   if (isFatal) {
     Alert.alert(
-        'Unexpected error occurred',
-        `
+      'Unexpected error occurred',
+      `
         Error: ${(isFatal) ? 'Fatal:' : ''} ${e.name} ${e.message}
         We have reported this to our team ! this is using gloable error util!
         `,
@@ -162,89 +169,120 @@ const errorHandlerUtils = (e, isFatal) => {
 };
 
 const errorHandlerForNative = (e) => {
+  const temp = { "a": JSON.stringify(e) };
   axios.create({
     baseURL: '',
-    headers: {'Content-Type': 'application/json'}
-  }).post('http://10.0.2.2:3000/',e,{})
-  .then(
-    console.log('success crash report')
-  );
+    headers: { 'Content-Type': 'application/json' }
+  }).post('http://localhost:3000/', temp)
+    .then(
+      console.log('success crash report')
+    );
 };
 
-setJSExceptionHandler(errorHandler, true);
+// setJSExceptionHandler(errorHandlerUtils, true);
 
 
-// setNativeExceptionHandler(errorHandlerForNative,true,false);
+setNativeExceptionHandler(errorHandlerForNative, true, false);
 // setNativeExceptionHandler(errorHandlerUtils,true,false);
 
 // setNativeExceptionHandler((errorString) => {
 //   fetch('http://192.168.0.104:3000/test/');
 // });
 
-setNativeExceptionHandler((errorString) => {
-  axios.create({
-    baseURL: '',
-    headers: {'Content-Type': 'application/json'}
-  }).get('http://10.0.2.2:3000/test/')
-  .then(
-    (e) => {
-      console.log(e);
-    }
-  );
-  console.log('crash report from java script',errorString)
-});
+// setNativeExceptionHandler((errorString) => {
+//   const temp = {"a" : "native"};
+//   axios.create({
+//     baseURL: '',
+//     headers: {'Content-Type': 'application/json'}
+//   }).post('http://localhost:3000/',temp)
+//   .then(
+//     (e) => {
+//       console.log(e);
+//     }
+//   );
+//   console.log('crash report from java script',errorString)
+// });
+
+
+
+
 
 const App: () => Node = () => {
+
+  const [error , setError] = useState(false);
+
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  }; 
-  
-  causeJSError = ()=>{ 
-    throw new Error('THIS IS A CUSTOM UNHANDLED JS ERROR');
+  };
+
+  causeJSError = () => {
+    setError(true);
+    // throw new Error('THIS IS A CUSTOM UNHANDLED JS ERROR');
   }
 
-  causeJSErrorUsingUtil = ()=>{
-    global.ErrorUtils.setGlobalHandler(errorHandlerUtils); 
+  causeJSErrorUsingUtil = () => {
+    // global.ErrorUtils.setGlobalHandler(errorHandlerUtils); 
     throw new Error('error util exception');
   }
 
-  causeNativeError = ()=>{
+  causeNativeError = () => {
     RnTestExceptionHandler.raiseTestNativeError();
   }
- 
+
+  useEffect(() => {
+    if(error){
+      throw new Error('THIS IS A CUSTOM UNHANDLED JS ERROR');
+    }
+
+  }, [error])
+
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Text>
+   
+      <SafeAreaView style={backgroundStyle}>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+        <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          style={backgroundStyle}>
+
+          <Text>
             error boundaries
-        </Text>
-        <ErrorBoundary>
+          </Text>
+          {/* <ErrorBoundary>
           <BuggyCounter /> 
         </ErrorBoundary>
         <ErrorBoundary>
           <BuggyCounter />
-        </ErrorBoundary>
-        <Text>
+        </ErrorBoundary> */}
+          <Text>
             react JS exception handler
-        </Text>
-        <Button onPress={() => this.causeJSError()} title="Js error" color="#841584"/> 
-        <Text>
+          </Text>
+          <Button onPress={() => this.causeJSError()} title="Js error" color="#841584" />
+          <Text>
             react JS exception handler
-        </Text>
-        <Button onPress={() => this.causeJSErrorUsingUtil()} title="Js util error" color="#841584"/> 
-        <Text>
+          </Text>
+          <Button onPress={() => this.causeJSErrorUsingUtil()} title="Js util error" color="#841584" />
+          <Text>
             react Native exception handler
-        </Text>
-        <Button onPress={() => this.causeNativeError()} title="Native error" color="#841584"/> 
-      </ScrollView>
-    </SafeAreaView>
-  ); 
+          </Text>
+
+          <Button onPress={() => this.causeNativeError()} title="Native error" color="#841584" />
+
+
+        </ScrollView>
+      </SafeAreaView>
+   
+  );
 };
+
+const AppWrapper = () => {
+  return (
+    <ErrorBoundary>
+      <App/>
+    </ErrorBoundary>   
+  )
+}
 
 const styles = StyleSheet.create({
   root: {
@@ -283,4 +321,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default App;
+export default AppWrapper;
+

@@ -4,12 +4,15 @@ import android.app.Application;
 import android.content.Context;
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
+import com.masteratul.exceptionhandler.ReactNativeExceptionHandlerPackage;
+import com.masteratul.exceptionhandler.ReactNativeExceptionHandlerPackage;
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.soloader.SoLoader;
 import java.lang.reflect.InvocationTargetException;
 import com.awesomeproject.RnTestExceptionHandlerPackage;
+import com.awesomeproject.DefaultErrorScreen;
 import java.util.List;
 import com.masteratul.exceptionhandler.ReactNativeExceptionHandlerModule;
 
@@ -49,6 +52,7 @@ public class MainApplication extends Application implements ReactApplication {
     SoLoader.init(this, /* native exopackage */ false);
     initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
     ReactNativeExceptionHandlerModule.setNativeExceptionHandler(new ExceptionHandler());
+    // ReactNativeExceptionHandlerModule.replaceErrorScreenActivityClass(DefaultErrorScreen.class);
   }
 
   /**
